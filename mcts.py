@@ -3,7 +3,9 @@ from typing import List
 import numpy as np
 import logging
 import math
+import torch
 
+EPS = 1e-8
 
 class MCTS():
     """
@@ -79,7 +81,9 @@ class MCTS():
 
         if s not in self.Ps:
             # leaf node
-            self.Ps[s], v = self.nnet.predict(canonicalBoard)
+            with torch.no_grad():
+                self.nnet.eval()
+                self.Ps[s], v = self.nnet.predict(canonicalBoard)
             valids = self.game.getValidMoves(canonicalBoard, 1)
             self.Ps[s] = self.Ps[s] * valids  # masking invalid moves
             sum_Ps_s = np.sum(self.Ps[s])

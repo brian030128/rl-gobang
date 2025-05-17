@@ -1,11 +1,15 @@
 from gobang.game import GobangGame
 from gobang.players import HumanGobangPlayer, RandomPlayer, AlphaZeroPlayer
 from net import NeuralNet
+import torch
 
 game = GobangGame()
 human = HumanGobangPlayer(game)
 greedy = RandomPlayer(game)
-alphago = AlphaZeroPlayer(game, NeuralNet(game))
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+nn = NeuralNet(game).to(device)
+alphago = AlphaZeroPlayer(game, nn)
 
 while True:
     board = game.getInitBoard()

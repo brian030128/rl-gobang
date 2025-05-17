@@ -1,12 +1,14 @@
-from gobang.board import Board, GobangGame
+from gobang.board import Board 
+from gobang.game import GobangGame
 
 import torch
 from torch import nn
 import torch.nn.functional as F
 
-class NeuralNet():
+class NeuralNet(nn.Module):
 
     def __init__(self, game: GobangGame, num_channels: int = 512, dropout: float = 0.3):
+        super(NeuralNet, self).__init__()
         self.board_x, self.board_y = game.getBoardSize()
         self.action_size = game.getActionSize()
 
@@ -36,9 +38,8 @@ class NeuralNet():
         self.v = nn.Linear(512, 1)
 
     def forward(self, s):
-        # s: batch_size x board_x x board_y
-        s = s.view(-1, 1, self.board_x, self.board_y)  # add channel dim: batch_size x 1 x board_x x board_y
-
+        
+        s = s.unsqueeze(1) # add channel dimension
         x = F.relu(self.bn1(self.conv1(s)))
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.relu(self.bn3(self.conv3(x)))
@@ -63,8 +64,9 @@ class NeuralNet():
             v: a float in [-1,1] that gives the value of the current board
         """
                 # game params
+        board = torch.from_numpy(board).float().to(self.conv1.weight.device)
         board = board[torch.newaxis, :, :]
         
-        pi, v = self.nnet.model.predict(board, verbose=False)
+        pi, v = self(board)
 
-        return pi[0], v[0]
+        return pi[0].to("cpu").numpy(), v[0].to("cpu").numpy()
