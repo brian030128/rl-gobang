@@ -1,5 +1,5 @@
 import numpy as np
-
+from mcts import MCTS
 
 class RandomPlayer():
     def __init__(self, game):
@@ -34,3 +34,15 @@ class HumanGobangPlayer():
                 print('Invalid')
 
         return a
+    
+
+class AlphaZeroPlayer():
+    def __init__(self, game, nnet):
+        self.game = game
+        self.nnet = nnet
+        self.mcts = MCTS(self.game, self.nnet)
+
+    def play(self, board, temp=1):
+        pi = self.mcts.getActionProb(board, temp=temp)
+        action = np.random.choice(len(pi), p=pi)
+        return action
