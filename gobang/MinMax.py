@@ -8,7 +8,7 @@ class MinMaxPlayer:
         self.game = game
         self.search_depth = search_depth
         self.board_size = game.n
-        self.count = -1
+        #self.count = -1
         self.last_move = '--'
         
         # Create alphabet mapping for board coordinates
@@ -17,18 +17,19 @@ class MinMaxPlayer:
     
     def play(self, board, player):
         """Make a move using minimax algorithm"""
-        self.count += 1
         
-        # First move - place in center
-        if self.count == 0:
+        # 計算目前總共下了多少步（非0的格子）
+        current_count = np.count_nonzero(board)
+
+        # 第一手（這個 AI 是該局的第一個下棋者）
+        if current_count == 0:
             x = int(self.board_size / 2)
             y = int(self.board_size / 2)
             move_coord = (y, x)
             action = self.board_size * y + x
             self.last_move = self.transform_to_board_format(x, y)
             return action
-        
-        # Use minimax for subsequent moves
+
         move_coord = self.get_best_move(board, player)
         y, x = move_coord
         action = self.board_size * y + x
@@ -44,14 +45,15 @@ class MinMaxPlayer:
     def get_best_move(self, board, player):
         """Find the best move using minimax with alpha-beta pruning"""
         # Determine search depth based on game progress
+        current_count = np.count_nonzero(board)
         depth = 1
-        if self.count < int(self.board_size * 3):
+        if current_count < int(self.board_size * 3):
             depth = 1
-        elif self.count < int(self.board_size * 4):
+        elif current_count < int(self.board_size * 4):
             depth = 2
         else:
             depth = self.search_depth
-        
+
         best_val = float('-inf')
         best_move = None
         alpha = float('-inf')

@@ -10,7 +10,7 @@ minmax = MinMaxPlayer(game, search_depth=2)
 
 while True:
     board = game.getInitBoard()
-    player = 1  # 1 for MinMax, -1 for human
+    player = -1
     game.display(board)
 
     while True:
@@ -25,14 +25,9 @@ while True:
         board, player = game.getNextState(board, player, action)
         game.display(board)
 
-        result = game.getGameEnded(board, 1)  # Use 1 as perspective
+        result = game.getGameEnded(board, player)
         if result != 0:
-            if result == 1:
-                print("MinMax Player wins!")
-            elif result == -1:
-                print("Human wins!")
-            else:
-                print("It's a draw!")
+            print("Result", result)
             break
 
     again = input("Do you want to play again? (y/n): ").strip().lower()
