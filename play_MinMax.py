@@ -1,5 +1,5 @@
 from gobang.game import GobangGame
-from gobang.min_max import MinMaxPlayer
+from gobang.min_max_player import MinMaxPlayer
 from gobang.players import HumanGobangPlayer
 import numpy as np
 

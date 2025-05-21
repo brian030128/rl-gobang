@@ -18,7 +18,6 @@ class HumanGobangPlayer():
         self.game = game
 
     def play(self, board, player):
-        self.game.display(board)
         valid = self.game.getValidMoves(board, player)
         #for i in range(len(valid)):
         #    if valid[i]:

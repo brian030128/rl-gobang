@@ -1,11 +1,13 @@
 from gobang.game import GobangGame
 from gobang.players import HumanGobangPlayer, RandomPlayer, AlphaZeroPlayer
+from gobang.min_max_player import MinMaxPlayer
 from net import NeuralNet
 import torch
 
 game = GobangGame()
 human = HumanGobangPlayer(game)
 greedy = RandomPlayer(game)
+minmax = MinMaxPlayer(game, search_depth=2)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 nn = NeuralNet(game).to(device)
@@ -18,7 +20,7 @@ while True:
         if player == 1:
             action = human.play(board, player)
         else:
-            action = alphago.play(board, player)
+            action = minmax.play(board, player)
         board, player = game.getNextState(board, player, action)
         game.display(board)
         result = game.getGameEnded(board, player)
