@@ -16,9 +16,9 @@ while True:
     player = 1
     while True:
         if player == 1:
-            action = human.play(board)
+            action = human.play(board, player)
         else:
-            action = alphago.play(board)
+            action = alphago.play(board, player)
         board, player = game.getNextState(board, player, action)
         game.display(board)
         result = game.getGameEnded(board, player)
