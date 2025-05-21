@@ -10,17 +10,17 @@ minmax = MinMaxPlayer(game, search_depth=2)
 
 while True:
     board = game.getInitBoard()
-    player = -1
+    player = 1
     game.display(board)
 
     while True:
-        if player == 1:
+        if player == -1:
             print("MinMax turn")
             action = minmax.play(board, player)
             y, x = divmod(action, game.n)
             print(f"MinMax plays: {y} {x}")
         else:
-            action = human.play(board)
+            action = human.play(board, player)
 
         board, player = game.getNextState(board, player, action)
         game.display(board)

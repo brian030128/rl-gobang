@@ -87,7 +87,7 @@ class MinMaxPlayer:
         """Minimax algorithm with alpha-beta pruning"""
         # Base case - evaluate board
         if depth == 0:
-            return self.evaluate_board(board)
+            return self.evaluate_board(board, player)
         
         if is_maximizing:
             value = float('-inf')
@@ -114,42 +114,41 @@ class MinMaxPlayer:
                             break
             return value
     
-    def evaluate_board(self, board):
+    def evaluate_board(self, board, player):
         """Evaluate the board and return a score"""
-        return self.sb(board, self.board_size)
+        return self.sb(board, self.board_size, player)
     
-    def sb(self, board, l):
+    def sb(self, board, l, player):
         """Board evaluation function (kept from original implementation)"""
         mystring = ''
+    
+        def translate(cell):
+            if cell == player:
+                return '1'
+            elif cell == -player:
+                return '2'
+            else:
+                return str(int(cell))
+
         # rows
         for i in board:
             mystring += 'W'
             for x in i:
-                if x == -1:
-                    mystring += '2'
-                else:
-                    mystring += str(int(x))
+                mystring += translate(x)
         # columns
         for i in range(0, l):
             mystring += 'W'
             for j in range(0, l):
-                if board[j][i] == -1:
-                    mystring += '2'
-                else:
-                    mystring += str(int(board[j][i]))
+                mystring += translate(board[j][i])
         
         # diagonals
         diags = [board[::-1,:].diagonal(i) for i in range(-1*(l-1),l)]
         diags.extend(board.diagonal(i) for i in range(l-1,l*-1,-1))
-
         x = [n.tolist() for n in diags]
         for z in x:
             mystring += 'W'
             for y in z:
-                if y == -1:
-                    mystring += '2'
-                else:
-                    mystring += str(int(y))
+                mystring += translate(y)
 
         # Scoring patterns (1 is maximizing player, 2 is minimizing player)
         total_me = mystring.count('00011')*100 + \
