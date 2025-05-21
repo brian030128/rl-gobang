@@ -17,9 +17,8 @@ class HumanGobangPlayer():
     def __init__(self, game):
         self.game = game
 
-    def play(self, board):
-        self.game.display(board)
-        valid = self.game.getValidMoves(board, 1)
+    def play(self, board, player):
+        valid = self.game.getValidMoves(board, player)
         #for i in range(len(valid)):
         #    if valid[i]:
         #        print(int(i/self.game.n), int(i%self.game.n))
@@ -34,7 +33,6 @@ class HumanGobangPlayer():
                 print('Invalid')
 
         return a
-    
 
 
 
@@ -46,12 +44,11 @@ class AlphaZeroPlayer():
         self.mcts = MCTS(self.game, self.nnet, args)
 
 
-    def play(self, board, temp=1):
+    def play(self, board, player, temp=1):
+        board = self.game.getCanonicalForm(board, player)
         pi = self.mcts.getActionProb(board, temp=temp)
         action = np.random.choice(len(pi), p=pi)
         return action
-    
-
 
 
 class dotdict(dict):
