@@ -2,15 +2,16 @@ import numpy as np
 from random import randint
 import time
 import copy
+import random
 
 class MinMaxPlayer:
-    def __init__(self, game, search_depth=2):
+    def __init__(self, game, search_depth=2, random_move_prob=0.1):
         self.game = game
         self.search_depth = search_depth
         self.board_size = game.n
         #self.count = -1
         self.last_move = '--'
-        
+        self.random_move_prob = random_move_prob # 傳入 random_move_prob
         # Create alphabet mapping for board coordinates
         self.alphabet = [chr(ord('a') + i) for i in range(26)]
         self.alphabet_dict = {chr(ord('a') + i): i for i in range(26)}
@@ -44,6 +45,13 @@ class MinMaxPlayer:
     
     def get_best_move(self, board, player):
         """Find the best move using minimax with alpha-beta pruning"""
+        # random_move_chance 的機率下會隨機下棋
+        if random.random() <  self.random_move_prob:
+            valid_moves = [(i, j) for i in range(self.board_size) for j in range(self.board_size) if board[i][j] == 0]
+            if valid_moves:
+                return random.choice(valid_moves)
+        
+        # 其他和原來相同
         # Determine search depth based on game progress
         current_count = np.count_nonzero(board)
         depth = 1
