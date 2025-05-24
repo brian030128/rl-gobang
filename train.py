@@ -47,6 +47,7 @@ def train(model, optimizer, data):
 class Agent:
 
     def __init__(self, game: GobangGame, net: NeuralNet, args):
+        self.args = args
         self.memory = deque()
         self.game = game
         self.net = net
