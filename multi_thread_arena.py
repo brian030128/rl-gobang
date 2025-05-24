@@ -36,35 +36,24 @@ def run(game, player1, player2, target_games, started_games, results):
             started_games.value += 2
         p1 = copy.deepcopy(player1)
         p2 = copy.deepcopy(player2)
-        result1, result2 = play_two_games(game, p1, p2)
+        result1 = play_single_game (game, p1, p2)
         results.append(result1)
+        
+        p1 = copy.deepcopy(player1)
+        p2 = copy.deepcopy(player2)
+        result2 = play_single_game(game, p2, p1)
         results.append(result2)
 
-def play_two_games(game, player1, player2):
+def play_single_game(game, player1, player2):
     board = game.getInitBoard()
     player = 1
-
-    result1 = None
-    result2 = None
     while True:
         action = player1.play(board) if player == 1 else player2.play(board)
         board, player = game.getNextState(board, player, action)
         result = game.getGameEnded(board, player)
         if result != 0:
             print(f"Game ended with result: {result}")
-            result1 = result
-            break
-    # Start a new game for the second player
-    player = 1
-    while True:
-        action = player2.play(board) if player == 1 else player1.play(board)
-        board, player = game.getNextState(board, player, action)
-        result = game.getGameEnded(board, player)
-        if result != 0:
-            print(f"Game ended with result: {result}")
-            result2 = result * -1
-            break
-    return result1, result2
+            return result
     
 import argparse
 if __name__ == '__main__':
