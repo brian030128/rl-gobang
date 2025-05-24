@@ -71,7 +71,7 @@ def train(model, optimizer, data, batch_size=3, train_epoches=5):
     return total_loss / (len(dataloader) * train_epoches)
 
 
-def episode_worker(game: GobangGame, net, args, training_data, started_episodes,target_episodes):
+def episode_worker(game: GobangGame, net, args, training_data, started_episodes,target_episodes, temp_threshold):
     while True:
         with started_episodes.get_lock():
             if started_episodes.value >= target_episodes:
@@ -82,9 +82,11 @@ def episode_worker(game: GobangGame, net, args, training_data, started_episodes,
         player = 1
         mcts = MCTS(game, net, args)
         episode_data = []
+        step = 0
         while True:
+            step += 1
             player_view = game.getCanonicalForm(board, player)
-            pi = mcts.getActionProb(player_view, temp=1)
+            pi = mcts.getActionProb(player_view, temp=1 if step < temp_threshold else 0)
 
             sym = game.getSymmetries(player_view, pi)
             for b, p in sym:
@@ -148,7 +150,7 @@ class Agent:
         training_data = self.manager.list()
         started_episodes = mp.Value('i', 0)
         for i in range(self.args.threads):
-            p = mp.Process(target=episode_worker, args=(self.game, self.net, self.args, training_data, started_episodes, num_episodes))
+            p = mp.Process(target=episode_worker, args=(self.game, self.net, self.args, training_data, started_episodes, num_episodes, self.args.temp_threshold))
             processes.append(p)
             p.start()
         for p in processes:
@@ -220,10 +222,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--num_episodes', type=int , default=100)
-    parser.add_argument('--batch_size', type=int , default=200)
+    parser.add_argument('--batch_size', type=int , default=64)
     parser.add_argument('--train_epoches', type=int , default=5)
     parser.add_argument('--num_iterations', type=int, default=1000)
-    parser.add_argument("--wandb-run-name", type=str, default="gobang-alpha-zero",)
+    parser.add_argument("--wandb-run-name", type=str, default="gobang-alpha-zero")
     parser.add_argument('--keep_iters', type=int, default=10)
     parser.add_argument('--pk_episodes', type=int, default=40)
     parser.add_argument('--pk_threshold', type=float, default=0.6)
@@ -231,6 +233,7 @@ if __name__ == "__main__":
     parser.add_argument('--cpuct', type=int, default=1)
     parser.add_argument('--save_dir', type=str, default="models")
     parser.add_argument('--threads', type=int, default=10)
+    parser.add_argument('--temp_threshold', type=int, default=10)
     parser.add_argument("--seed", type=int, default=524126, help="Random seed for reproduction")
 
     args = parser.parse_args()
