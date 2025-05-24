@@ -131,7 +131,7 @@ class Agent:
         training_data = self.manager.list()
         started_episodes = mp.Value('i', 0)
         for i in range(self.args.threads):
-            p = mp.Process(target=episode_worker, args=(self.game, self.net, training_data, started_episodes, num_episodes))
+            p = mp.Process(target=episode_worker, args=(self.game, self.net, self.args, training_data, started_episodes, num_episodes))
             processes.append(p)
             p.start()
         for p in processes:
