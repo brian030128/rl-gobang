@@ -5,7 +5,7 @@ from net import NeuralNet
 import torch
 import time
 
-def play_single_game(game_id, result_holder):
+def play_single_game(game_id):
     game = GobangGame()
     device = "cuda" if torch.cuda.is_available() else "cpu"
     
@@ -26,29 +26,31 @@ def play_single_game(game_id, result_holder):
         board, player = game.getNextState(board, player, action)
         result = game.getGameEnded(board, player)
         if result != 0:
-            result_holder[game_id] = result
-            break
+            return result
 
-# 執行 5 個執行緒
-num_games = 3
-threads = []
-results = [0] * num_games
+import multiprocessing as mp
 
-start_time = time.time()
+def run_game_wrapper(game_id, result_dict):
+    result = play_single_game(game_id)
+    result_dict[game_id] = result
 
-for i in range(num_games):
-    thread = threading.Thread(target=play_single_game, args=(i, results))
-    threads.append(thread)
-    thread.start()
+if __name__ == '__main__':
+    num_games = 20
+    manager = mp.Manager()
+    results = manager.dict()
+    processes = []
 
-for thread in threads:
-    thread.join()
+    start = time.time()
 
-end_time = time.time()
+    for i in range(num_games):
+        p = mp.Process(target=run_game_wrapper, args=(i, results))
+        processes.append(p)
+        p.start()
 
-# 統計
-print("All games completed.")
-print(f"Time taken: {end_time - start_time:.2f} seconds")
-print(f"Wins for Player 1: {results.count(1)}")
-print(f"Wins for Player -1: {results.count(-1)}")
-print(f"Draws: {results.count(1e-4)}")
+    for p in processes:
+        p.join()
+
+    print("Wins for Player 1:", list(results.values()).count(1))
+    print("Wins for Player -1:", list(results.values()).count(-1))
+    print("Draws:", list(results.values()).count(1e-4))
+    print("Total time taken:", time.time() - start)
