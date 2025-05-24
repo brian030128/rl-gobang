@@ -15,41 +15,55 @@ class MultiThreadedArena:
     
     def pk(self, player1, player2, num_games=40):
         results = self.manager.list()
+        games_started = self.manager.Value('i', 0)
         processes = []
 
-        iter = num_games // self.threads
-        last_iter = num_games % self.threads
-        for j in range(iter+1):
-            for i in range(self.threads):
-                if j == iter and i >= last_iter:
-                    break
-                p1 = copy.deepcopy(player1)
-                p2 = copy.deepcopy(player2)
-                p = mp.Process(target=run, args=(self.game, p1, p2, j * self.threads + i, results))
-                processes.append(p)
-                p.start()
+        for i in range(self.threads):
+            p = mp.Process(target=run, args=(self.game, player1, player2, num_games, games_started, results))
+            processes.append(p)
+            p.start()
+        for p in processes:
+            p.join()
 
-            for p in processes:
-                p.join()
-            processes.clear()
-        
         return results
-    
-def run(game, p1, p2, i, results):
-    result = play_single_game(game, p1, p2)
-    results.append(result)
 
-def play_single_game(game, player1, player2):
+def run(game, player1, player2, target_games, started_games, results):
+    while True:
+        with started_games.get_lock():
+            if started_games.value >= target_games:
+                break
+            started_games.value += 2
+        p1 = copy.deepcopy(player1)
+        p2 = copy.deepcopy(player2)
+        result1, result2 = play_two_games(game, p1, p2, results)
+        results.append(result1)
+        results.append(result2)
+
+def play_two_games(game, player1, player2):
     board = game.getInitBoard()
     player = 1
 
+    result1 = None
+    result2 = None
     while True:
         action = player1.play(board) if player == 1 else player2.play(board)
         board, player = game.getNextState(board, player, action)
         result = game.getGameEnded(board, player)
         if result != 0:
             print(f"Game ended with result: {result}")
-            return result
+            result1 = result
+            break
+    # Start a new game for the second player
+    player = 2
+    while True:
+        action = player1.play(board) if player == 1 else player2.play(board)
+        board, player = game.getNextState(board, player, action)
+        result = game.getGameEnded(board, player)
+        if result != 0:
+            print(f"Game ended with result: {result}")
+            result2 = result
+            break
+    return result1, result2
     
 import argparse
 if __name__ == '__main__':
@@ -79,4 +93,5 @@ if __name__ == '__main__':
     start = time.time()
     result = arena.pk(player1, player2)
     print(result)
+    print(len(result))
     print("Total time taken:", time.time() - start)
