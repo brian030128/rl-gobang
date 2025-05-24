@@ -14,7 +14,7 @@ class MultiThreadedArena:
         self.manager = mp.Manager()
     
     def pk(self, player1, player2, num_games=40):
-        results = self.manager.dict()
+        results = self.manager.list()
         processes = []
 
         iter = num_games // self.threads
@@ -25,7 +25,7 @@ class MultiThreadedArena:
                     break
                 p1 = copy.deepcopy(player1)
                 p2 = copy.deepcopy(player2)
-                p = mp.Process(target=self.run, args=(self.game, p1, p2, j * self.threads + i, results))
+                p = mp.Process(target=run, args=(self.game, p1, p2, j * self.threads + i, results))
                 processes.append(p)
                 p.start()
 
@@ -35,21 +35,21 @@ class MultiThreadedArena:
         
         return results
     
-    def run(self, game, p1, p2, i, results):
-        result = self.play_single_game(game, p1, p2)
-        results[i] = result
+def run(game, p1, p2, i, results):
+    result = play_single_game(game, p1, p2)
+    results.append(result)
 
-    def play_single_game(self, game, player1, player2):
-        board = game.getInitBoard()
-        player = 1
+def play_single_game(game, player1, player2):
+    board = game.getInitBoard()
+    player = 1
 
-        while True:
-            action = player1.play(board) if player == 1 else player2.play(board)
-            board, player = game.getNextState(board, player, action)
-            result = game.getGameEnded(board, player)
-            if result != 0:
-                print(f"Game ended with result: {result}")
-                return result
+    while True:
+        action = player1.play(board) if player == 1 else player2.play(board)
+        board, player = game.getNextState(board, player, action)
+        result = game.getGameEnded(board, player)
+        if result != 0:
+            print(f"Game ended with result: {result}")
+            return result
     
 import argparse
 if __name__ == '__main__':
