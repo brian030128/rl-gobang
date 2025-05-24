@@ -35,7 +35,7 @@ def run_game_wrapper(game_id, result_dict):
     result_dict[game_id] = result
 
 if __name__ == '__main__':
-    num_games = 20
+    num_games = 5
     manager = mp.Manager()
     results = manager.dict()
     processes = []

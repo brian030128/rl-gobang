@@ -135,7 +135,8 @@ if __name__ == "__main__":
     parser.add_argument('--num_iterations', type=int)
     parser.add_argument('--keep_iters', type=int, default=20)
     parser.add_argument('--pk_episodes', type=int, default=40)
-
+    parser.add_argument('--num_mcts_sims', type=int, default=25)
+    parser.add_argument('--cpuct', type=int, default=1)
 
     args = parser.parse_args()
     random.seed(args.seed)
@@ -145,7 +146,6 @@ if __name__ == "__main__":
     game = GobangGame()
     net = NeuralNet(game).to(device)
     wandb.init(project="DLP-Lab5-DQN-CartPole", name=args.wandb_run_name, save_code=True)
-
 
     agent = Agent(game, net, args)
     agent.learn()
