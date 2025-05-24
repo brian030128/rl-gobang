@@ -9,7 +9,7 @@ import torch
 import numpy as np
 from tqdm import tqdm
 
-
+from multi_thread_arena import MultiThreadedArena
 from gobang.game import GobangGame
 from net import NeuralNet
 from mcts import MCTS
@@ -52,6 +52,7 @@ class Agent:
         self.current_best = copy.deepcopy(net)
         self.improved_iters = []
 
+        self.arena = MultiThreadedArena(game, num_games=args.pk_episodes)
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=0.001, weight_decay=1e-4)
 
 
@@ -113,8 +114,8 @@ class Agent:
             # pk with the best model
             wins = 0
             total_games = 0
-            for i in range(args.pk_episodes):
-                player = 1
+            
+                
 
         
     
@@ -127,9 +128,9 @@ class Agent:
 
 
 if __name__ == "__main__":
+    torch.multiprocessing.set_start_method('spawn')
 
     parser = argparse.ArgumentParser()
-
 
     parser.add_argument('--num_episodes', type=int)
     parser.add_argument('--num_iterations', type=int)

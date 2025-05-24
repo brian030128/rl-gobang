@@ -7,29 +7,33 @@ import copy
 import multiprocessing as mp
 
 class MultiThreadedArena:
-    def __init__(self, game, num_games):
+    def __init__(self, game, threads=10):
         self.game = game
-        self.num_games = num_games
+        self.threads = threads
         self.results = []
         self.manager = mp.Manager()
     
-    def pk(self, player1, player2):
+    def pk(self, player1, player2, num_games=40):
         results = self.manager.dict()
         processes = []
 
-        for i in range(self.num_games):
-            p1 = copy.deepcopy(player1)
-            p2 = copy.deepcopy(player2)
-            p = mp.Process(target=run, args=(self.game, p1, p2, i , results))
-            processes.append(p)
-            p.start()
+        iter = num_games // self.threads
+        last_iter = num_games % self.threads
+        for j in range(iter+1):
+            for i in range(self.threads):
+                if j == iter and i >= last_iter:
+                    break
+                p1 = copy.deepcopy(player1)
+                p2 = copy.deepcopy(player2)
+                p = mp.Process(target=run, args=(self.game, p1, p2, j * self.threads + i, results))
+                processes.append(p)
+                p.start()
 
-        for p in processes:
-            p.join()
-        print("Wins for Player 1:", list(results.values()).count(1))
-        print("Wins for Player -1:", list(results.values()).count(-1))
-        print("Draws:", list(results.values()).count(1e-4))
-        print("Total time taken:", time.time() - start)
+            for p in processes:
+                p.join()
+            processes.clear()
+        
+        return results
     
 def run(game, p1, p2, i, results):
     result = play_single_game(game, p1, p2)
@@ -49,7 +53,7 @@ def play_single_game(game, player1, player2):
 import argparse
 if __name__ == '__main__':
     torch.multiprocessing.set_start_method('spawn')
-    arena = MultiThreadedArena(GobangGame(), num_games=5)
+    arena = MultiThreadedArena(GobangGame())
     device = "cuda" if torch.cuda.is_available() else "cpu"
     game = GobangGame()
 
@@ -72,5 +76,6 @@ if __name__ == '__main__':
     player2 = AlphaZeroPlayer(game, nn2, copy.deepcopy(args))
 
     start = time.time()
-    arena.pk(player1, player2)
+    result = arena.pk(player1, player2)
+    print(result)
     print("Total time taken:", time.time() - start)
