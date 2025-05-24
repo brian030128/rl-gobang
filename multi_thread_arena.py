@@ -6,6 +6,7 @@ import time
 import copy
 import multiprocessing as mp
 
+
 class MultiThreadedArena:
     def __init__(self, game, threads=10):
         self.game = game
@@ -15,7 +16,7 @@ class MultiThreadedArena:
     
     def pk(self, player1, player2, num_games=40):
         results = self.manager.list()
-        games_started = self.manager.Value('i', 0)
+        games_started = mp.Value('i', 0)
         processes = []
 
         for i in range(self.threads):
