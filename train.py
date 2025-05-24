@@ -169,7 +169,7 @@ class Agent:
 
             print(f"Iteration {i}, Loss: {loss}")
             wandb.log({
-                "Train Loss": loss.item(),
+                "Train Loss": loss,
                 "Train Step": self.train_count
             })
             
