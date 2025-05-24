@@ -10,6 +10,7 @@ import numpy as np
 from tqdm import tqdm
 
 from multi_thread_arena import MultiThreadedArena
+from gobang.players import AlphaZeroPlayer
 from gobang.game import GobangGame
 from net import NeuralNet
 from mcts import MCTS
@@ -52,8 +53,11 @@ class Agent:
         self.current_best = copy.deepcopy(net)
         self.improved_iters = []
 
-        self.arena = MultiThreadedArena(game, num_games=args.pk_episodes)
+        self.arena = MultiThreadedArena(game)
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=0.001, weight_decay=1e-4)
+
+        self.best_model_iteration = 0
+        self.train_count = 0
 
 
     def episode(self):
@@ -76,8 +80,11 @@ class Agent:
                 training_data = [(x, y, result if player == 1 else - result) for x, y, player in training_data]
                 break
         return training_data
+    
+    
 
     def learn(self):
+        args = self.args
         for i in range(args.num_iterations):
             print(f"Starting iteration {i}")
 
@@ -99,6 +106,7 @@ class Agent:
             random.shuffle(training_data)
 
             loss = train(self.net, self.optimizer, training_data)
+            self.train_count += 1
 
             print(f"Iteration {i}, Loss: {loss}")
             wandb.log({
@@ -112,10 +120,27 @@ class Agent:
                 print(f"Model saved at model_iter_{i}.pth")
 
             # pk with the best model
-            wins = 0
-            total_games = 0
+            result = self.arena.pk(AlphaZeroPlayer(self.game, self.net, args),
+                          AlphaZeroPlayer(self.game, self.current_best, args),
+                          args.pk_episodes)
+            winrate = result.count(1) / args.pk_episodes
+            print(f"Winrate against current best: {winrate:.2f}")
+
+            wandb.log({
+                "Winrate": winrate,
+                "Best Model Iteration": self.best_model_iteration
+            })
             
-                
+            if winrate > args.pk_threshold:
+                save_model(self.net, f"{args.save_dir}/best_{self.best_model_iteration}.pth")
+                self.current_best.load_state_dict(self.net.state_dict())
+                self.best_model_iteration += 1
+                print(f"New best model found at iteration {i} with winrate {winrate:.2f}")
+            
+
+
+
+
 
         
     
@@ -136,8 +161,11 @@ if __name__ == "__main__":
     parser.add_argument('--num_iterations', type=int)
     parser.add_argument('--keep_iters', type=int, default=20)
     parser.add_argument('--pk_episodes', type=int, default=40)
+    parser.add_argument('--pk_threshold', type=float, default=0.6)
     parser.add_argument('--num_mcts_sims', type=int, default=25)
     parser.add_argument('--cpuct', type=int, default=1)
+    parser.add_argument('--save-dir', type="str", default="models")
+
 
     args = parser.parse_args()
     random.seed(args.seed)

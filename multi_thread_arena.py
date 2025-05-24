@@ -52,7 +52,6 @@ def play_single_game(game, player1, player2):
         board, player = game.getNextState(board, player, action)
         result = game.getGameEnded(board, player)
         if result != 0:
-            print(f"Game ended with result: {result}")
             return result
     
 import argparse
