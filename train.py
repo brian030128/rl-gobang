@@ -4,6 +4,7 @@ import random
 import argparse
 import multiprocessing as mp
 import time
+import os
 
 import wandb
 import torch
@@ -187,6 +188,7 @@ class Agent:
             result = self.arena.pk(AlphaZeroPlayer(self.game, self.net, args),
                           AlphaZeroPlayer(self.game, self.current_best, args),
                           args.pk_episodes)
+            print(result)
             winrate = result.count(1) / args.pk_episodes
             print(f"Winrate against current best: {winrate:.2f}")
 
@@ -217,11 +219,13 @@ if __name__ == "__main__":
     parser.add_argument('--pk_threshold', type=float, default=0.6)
     parser.add_argument('--num_mcts_sims', type=int, default=25)
     parser.add_argument('--cpuct', type=int, default=1)
-    parser.add_argument('--save-dir', type=str, default="models")
+    parser.add_argument('--save_dir', type=str, default="models")
     parser.add_argument('--threads', type=int, default=10)
     parser.add_argument("--seed", type=int, default=524126, help="Random seed for reproduction")
 
     args = parser.parse_args()
+    os.makedirs(args.save_dir, exist_ok=True)
+
     random.seed(args.seed)
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)

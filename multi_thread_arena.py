@@ -44,7 +44,7 @@ def worker(game, player1, player2, target_games, started_games, results):
         result2 = play_single_game(game, p2, p1)
         results.append(result2 * -1)
 
-def play_single_game(game, player1, player2):
+def play_single_game(game: GobangGame, player1, player2):
     board = game.getInitBoard()
     player = 1
     while True:
