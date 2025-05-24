@@ -38,7 +38,7 @@ class MyDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
-def train(model, optimizer, data, batch_size=3):
+def train(model, optimizer, data, batch_size=3, train_epoches=10):
     model.train()
 
     total_loss = 0
@@ -209,6 +209,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--num_episodes', type=int , default=20)
     parser.add_argument('--batch_size', type=int , default=40)
+    parser.add_argument('--train_epoches', type=int , default=10)
     parser.add_argument('--num_iterations', type=int, default=1000)
     parser.add_argument("--wandb-run-name", type=str, default="gobang-alpha-zero",)
     parser.add_argument('--keep_iters', type=int, default=20)
