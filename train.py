@@ -163,8 +163,8 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--num_episodes', type=int , default=1000)
-    parser.add_argument('--num_iterations', type=int, default=100)
+    parser.add_argument('--num_episodes', type=int , default=100)
+    parser.add_argument('--num_iterations', type=int, default=1000)
     parser.add_argument("--wandb-run-name", type=str, default="gobang-alpha-zero",)
     parser.add_argument('--keep_iters', type=int, default=20)
     parser.add_argument('--pk_episodes', type=int, default=40)
