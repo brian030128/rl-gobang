@@ -1,6 +1,10 @@
 import copy
+from collections import deque
+import random
+import argparse
 
 
+import wandb
 import torch
 import numpy as np
 from tqdm import tqdm
@@ -16,13 +20,39 @@ def save_model(model, path):
     torch.save(model.state_dict(), path)
 
 
+def train(model, optimizer, data):
+    model.train()
+    optimizer.zero_grad()
+
+    total_loss = 0
+    for board, pi, v in data:
+        board = torch.from_numpy(board).float().to(device)
+        pi = torch.from_numpy(pi).float().to(device)
+        v = torch.tensor(v, dtype=torch.float32).to(device)
+
+        pred_pi, pred_v = model(board)
+
+        loss_pi = -torch.sum(pi * torch.log(pred_pi + 1e-10))
+        loss_v = torch.mean((pred_v - v) ** 2)
+
+        loss = loss_pi + loss_v
+        total_loss += loss.item()
+
+        loss.backward()
+
+    optimizer.step()
+    return total_loss / len(data)
+
 class Agent:
 
     def __init__(self, game: GobangGame, net: NeuralNet, args):
-        self.memory = []
+        self.memory = deque()
         self.game = game
         self.net = net
         self.current_best = copy.deepcopy(net)
+        self.improved_iters = []
+
+        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=0.001, weight_decay=1e-4)
 
 
     def episode(self):
@@ -47,15 +77,78 @@ class Agent:
         return training_data
 
     def learn(self):
-        for i in range(1000):
+        for i in range(args.num_iterations):
             print(f"Starting iteration {i}")
-            for j in tqdm(range(100)):
+
+            iter_memory = []
+            for j in tqdm(range(args.num_episodes)):
                 training_data = self.episode()
-                self.memory.extend(training_data)
+                iter_memory.append(training_data)
+
+            self.memory.append(iter_memory)
+        
+            if len(self.memory) > args.keep_iters:
+                self.memory.popleft(0)
+            
+            # Update the neural network
+            training_data = []
+            for episode in self.memory:
+                training_data.extend(episode)
+            
+            random.shuffle(training_data)
+
+            loss = train(self.net, self.optimizer, training_data)
+
+            print(f"Iteration {i}, Loss: {loss}")
+            wandb.log({
+                "Train Loss": loss.item(),
+                "Train Step": self.train_count
+            })
+            
+            # save the model every 10 iterations
+            if i % 10 == 0:
+                save_model(self.net, f"model_iter_{i}.pth")
+                print(f"Model saved at model_iter_{i}.pth")
+
+            # pk with the best model
+            wins = 0
+            total_games = 0
+            for i in range(args.pk_episodes):
+                player = 1
+
+        
+    
+
+
+            
+
                 
 
 
-game = GobangGame()
-net = NeuralNet(game).to(device)
-agent = Agent(game, net, None)
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+
+
+    parser.add_argument('--num_episodes', type=int)
+    parser.add_argument('--num_iterations', type=int)
+    parser.add_argument('--keep_iters', type=int, default=20)
+    parser.add_argument('--pk_episodes', type=int, default=40)
+
+
+    args = parser.parse_args()
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+
+    game = GobangGame()
+    net = NeuralNet(game).to(device)
+    wandb.init(project="DLP-Lab5-DQN-CartPole", name=args.wandb_run_name, save_code=True)
+
+
+    agent = Agent(game, net, args)
+    agent.learn()
+
+
 
