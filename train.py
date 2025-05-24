@@ -27,7 +27,9 @@ def train(model, optimizer, data):
 
     total_loss = 0
     for board, pi, v in data:
+        print(board)
         board = torch.tensor(board, dtype=torch.float32, device=device)
+        print(board.shape)
         pi = torch.tensor(pi, dtype=torch.float32, device=device)
         v = torch.tensor(v, dtype=torch.float32, device=device)
 
