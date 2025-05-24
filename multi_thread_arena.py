@@ -48,7 +48,7 @@ def play_single_game(game, player1, player2):
     
 import argparse
 if __name__ == '__main__':
-    arena = MultiThreadedArena(GobangGame(), num_games=20)
+    arena = MultiThreadedArena(GobangGame(), num_games=5)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     game = GobangGame()
 
