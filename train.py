@@ -77,7 +77,6 @@ class Agent:
             action = np.random.choice(len(pi), p=pi)
 
             board, player = game.getNextState(board, player, action)
-            game.display(board)
             result = game.getGameEnded(board, player)
             if result != 0:
                 training_data = [(x, y, result if player == 1 else - result) for x, y, player in training_data]
