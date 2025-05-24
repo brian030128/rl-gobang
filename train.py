@@ -8,6 +8,7 @@ import wandb
 import torch
 import numpy as np
 from tqdm import tqdm
+from torch.utils.data import Dataset, DataLoader
 
 from multi_thread_arena import MultiThreadedArena
 from gobang.players import AlphaZeroPlayer
@@ -21,28 +22,38 @@ def save_model(model, path):
     torch.save(model.state_dict(), path)
 
 
-def train(model, optimizer, data):
+
+class MyDataset(Dataset):
+    def __init__(self, data):
+        self.data = data
+
+    def __getitem__(self, idx):
+        board, pi, v = self.data[idx]
+        b_tensor = torch.tensor(board, dtype=torch.float32)
+        pi_tensor = torch.tensor(pi, dtype=torch.float32)
+        v_tensor = torch.tensor(v, dtype=torch.float32)
+        return b_tensor, pi_tensor, v_tensor
+
+    def __len__(self):
+        return len(self.data)
+
+def train(model, optimizer, data, batch_size = 3):
     model.train()
     optimizer.zero_grad()
 
     total_loss = 0
-    for board, pi, v in data:
-        print(board)
-        board = torch.tensor(board, dtype=torch.float32, device=device)
-        print(board.shape)
-        pi = torch.tensor(pi, dtype=torch.float32, device=device)
-        v = torch.tensor(v, dtype=torch.float32, device=device)
 
-        pred_pi, pred_v = model(board)
+    dataset = MyDataset(data)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-        loss_pi = -torch.sum(pi * torch.log(pred_pi + 1e-10))
-        loss_v = torch.mean((pred_v - v) ** 2)
-
+    for boards, pis, vs in dataloader:
+        pred_pi, pred_v = model(boards)
+        loss_pi = -torch.sum(pis * torch.log(pred_pi + 1e-10))
+        loss_v = torch.mean((pred_v - vs) ** 2)
         loss = loss_pi + loss_v
         total_loss += loss.item()
-
         loss.backward()
-
+    
     optimizer.step()
     return total_loss / len(data)
 
