@@ -26,12 +26,11 @@ while True:
     else:
         action = alphago2.play(board)
     board, player = game.getNextState(board, player, action)
-    game.display(board)
     result = game.getGameEnded(board, player)
     if result != 0:
         print("Result", result)
         break
-    
+
 print("Game End")
 print("Total time taken:", time.time() - start)
 
