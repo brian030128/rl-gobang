@@ -68,7 +68,7 @@ class NeuralNet(nn.Module):
         print(board.shape)
         board = board[torch.newaxis, :, :]
 
-        print("w: "+board.shape   )
+        print(board.shape   )
         
         pi, v = self(board)
 
