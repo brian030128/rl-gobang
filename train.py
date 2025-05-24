@@ -3,6 +3,7 @@ from collections import deque
 import random
 import argparse
 import multiprocessing as mp
+import time
 
 import wandb
 import torch
@@ -129,7 +130,7 @@ class Agent:
         processes = []
         training_data = self.manager.list()
         started_episodes = mp.Value('i', 0)
-        for i in range(self.threads):
+        for i in range(self.args.threads):
             p = mp.Process(target=episode_worker, args=(self.game, self.net, training_data, started_episodes, num_episodes))
             processes.append(p)
             p.start()
@@ -152,7 +153,9 @@ class Agent:
             #     iter_data.extend(training_data)
 
             # Multi thread for gathering data
+            start = time.time()
             iter_data = self.multi_thread_episode(args.num_episodes)
+            print("Iteration took ", time.time() - start)
 
             self.memory.append(iter_data)
         
