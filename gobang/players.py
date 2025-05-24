@@ -46,6 +46,7 @@ def get_args():
     parser.add_argument('--pk_episodes', type=int, default=40)
     parser.add_argument('--num_mcts_sims', type=int, default=25)
     parser.add_argument('--cpuct', type=int, default=1)
+    parser.add_argument("--seed", type=int, default=524126, help="Random seed for reproduction")
     args = parser.parse_args()
     return args
 
