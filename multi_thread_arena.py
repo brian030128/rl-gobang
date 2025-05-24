@@ -36,7 +36,7 @@ def run(game, player1, player2, target_games, started_games, results):
             started_games.value += 2
         p1 = copy.deepcopy(player1)
         p2 = copy.deepcopy(player2)
-        result1, result2 = play_two_games(game, p1, p2, results)
+        result1, result2 = play_two_games(game, p1, p2)
         results.append(result1)
         results.append(result2)
 
