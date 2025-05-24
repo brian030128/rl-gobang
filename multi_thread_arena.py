@@ -55,14 +55,14 @@ def play_two_games(game, player1, player2):
             result1 = result
             break
     # Start a new game for the second player
-    player = 2
+    player = 1
     while True:
-        action = player1.play(board) if player == 1 else player2.play(board)
+        action = player2.play(board) if player == 1 else player1.play(board)
         board, player = game.getNextState(board, player, action)
         result = game.getGameEnded(board, player)
         if result != 0:
             print(f"Game ended with result: {result}")
-            result2 = result
+            result2 = result * -1
             break
     return result1, result2
     
