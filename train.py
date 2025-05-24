@@ -128,12 +128,12 @@ class Agent:
             
             # Update the neural network
             training_data = []
-            for episode in self.memory:
-                training_data.extend(episode)
+            for iter_data in self.memory:
+                training_data.extend(iter_data)
             
             random.shuffle(training_data)
 
-            print(training_data)
+            print(training_data[0])
             loss = train(self.net, self.optimizer, training_data)
             self.train_count += 1
 
