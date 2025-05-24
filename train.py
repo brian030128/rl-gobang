@@ -166,7 +166,7 @@ if __name__ == "__main__":
     parser.add_argument('--cpuct', type=int, default=1)
     parser.add_argument('--save-dir', type=str, default="models")
     parser.add_argument('--threads', type=int, default=10)
-
+    parser.add_argument("--seed", type=int, default=524126, help="Random seed for reproduction")
 
     args = parser.parse_args()
     random.seed(args.seed)
