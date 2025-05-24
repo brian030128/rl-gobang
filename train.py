@@ -47,6 +47,7 @@ def train(model, optimizer, data, batch_size = 3):
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
     for boards, pis, vs in dataloader:
+        print(boards.shape)
         pred_pi, pred_v = model(boards)
         loss_pi = -torch.sum(pis * torch.log(pred_pi + 1e-10))
         loss_v = torch.mean((pred_v - vs) ** 2)
