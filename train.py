@@ -27,9 +27,9 @@ def train(model, optimizer, data):
 
     total_loss = 0
     for board, pi, v in data:
-        board = torch.from_numpy(board).float().to(device)
-        pi = torch.from_numpy(pi).float().to(device)
-        v = torch.tensor(v, dtype=torch.float32).to(device)
+        board = torch.tensor(board, dtype=torch.float32, device=device)
+        pi = torch.tensor(pi, dtype=torch.float32, device=device)
+        v = torch.tensor(v, dtype=torch.float32, device=device)
 
         pred_pi, pred_v = model(board)
 
@@ -65,6 +65,22 @@ def episode(self):
             break
     return training_data
 
+def episode_worker(game: GobangGame, net, args, training_data, started_episodes,target_episodes):
+    while True:
+        with started_episodes.get_lock():
+            if started_episodes.value >= target_episodes:
+                break 
+            started_episodes.value += 1
+        
+        board = game.getInitBoard()
+        player = 1
+        mcts = MCTS(game, net, args)
+        episode_data = []
+        while True:
+            player_view = game.getCanonicalForm(board, player)
+            pi = mcts.getActionProb(player_view, temp=1)
+            episode_data.append((player_view, pi, player))
+            
 
 class Agent:
 
