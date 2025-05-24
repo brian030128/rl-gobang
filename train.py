@@ -46,23 +46,26 @@ def train(model, optimizer, data, batch_size=3, train_epoches=10):
     dataset = MyDataset(data)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-    for boards, pis, vs in dataloader:
-        optimizer.zero_grad()
+    for _ in range(train_epoches):
+        for boards, pis, vs in dataloader:
+            if boards.shape[0] == 1:
+                break
+            optimizer.zero_grad()
 
-        pred_pi, pred_v = model(boards)
-        loss_pi = -torch.mean(torch.sum(pis * torch.log(pred_pi + 1e-10), dim=1))
-        loss_v = torch.mean((pred_v - vs) ** 2)
-        loss = loss_pi + loss_v
-        loss.backward()
-        
-        torch.nn.utils.clip_grad_norm_(model.parameters(), 5.0)
-        optimizer.step()
+            pred_pi, pred_v = model(boards)
+            loss_pi = -torch.mean(torch.sum(pis * torch.log(pred_pi + 1e-10), dim=1))
+            loss_v = torch.mean((pred_v - vs) ** 2)
+            loss = loss_pi + loss_v
+            loss.backward()
+            
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 5.0)
+            optimizer.step()
 
-        total_loss += loss.item()
+            total_loss += loss.item()
 
-        wandb.log({
-            "Loss": loss.item(),
-        })
+            wandb.log({
+                "Loss": loss.item(),
+            })
 
     return total_loss / len(dataloader)
 
