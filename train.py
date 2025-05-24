@@ -59,27 +59,6 @@ def train(model, optimizer, data, batch_size = 3):
     optimizer.step()
     return total_loss / len(data)
 
-
-def episode(self):
-    board = self.game.getInitBoard()
-    player = 1
-    mcts = MCTS(self.game, self.net, self.args)
-
-    training_data = []
-    while True:
-        player_view_board = self.game.getCanonicalForm(board, player)
-        pi = mcts.getActionProb(player_view_board, temp=1)
-        training_data.append((player_view_board, pi, player))
-
-        action = np.random.choice(len(pi), p=pi)
-
-        board, player = game.getNextState(board, player, action)
-        result = game.getGameEnded(board, player)
-        if result != 0:
-            training_data = [(x, y, result if player == 1 else - result) for x, y, player in training_data]
-            break
-    return training_data
-
 def episode_worker(game: GobangGame, net, args, training_data, started_episodes,target_episodes):
     while True:
         with started_episodes.get_lock():
@@ -95,7 +74,17 @@ def episode_worker(game: GobangGame, net, args, training_data, started_episodes,
             player_view = game.getCanonicalForm(board, player)
             pi = mcts.getActionProb(player_view, temp=1)
             episode_data.append((player_view, pi, player))
-            
+
+            action = np.random.choice(len(pi), p=pi)
+
+            board, player = game.getNextState(board, player, action)
+            result = game.getGameEnded(board, player)
+            if result != 0:
+                training_data = [(x, y, result if player == 1 else - result) for x, y, player in training_data]
+                break
+        
+        training_data.extend(episode_data)
+
 
 class Agent:
 
@@ -137,9 +126,17 @@ class Agent:
         return training_data
     
     def multi_thread_episode(self, num_episodes):
-        process = []
-        for i in range(self.args):
-            pass
+        processes = []
+        training_data = self.manager.list()
+        started_episodes = mp.Value('i', 0)
+        for i in range(self.threads):
+            p = mp.Process(target=episode_worker, args=(self.game, self.net, training_data, started_episodes, num_episodes))
+            processes.append(p)
+            p.start()
+        for p in processes:
+            p.join()
+        return training_data
+            
 
 
     def learn(self):
@@ -147,14 +144,19 @@ class Agent:
         for i in range(args.num_iterations):
             print(f"Starting iteration {i}")
 
-            iter_memory = []
-            for j in tqdm(range(args.num_episodes)):
-                training_data = self.episode()
-                iter_memory.extend(training_data)
+            
+            # Single thread for gathering data
+            # iter_data = []
+            # for j in tqdm(range(args.num_episodes)):
+            #     training_data = self.episode()
+            #     iter_data.extend(training_data)
 
-            self.memory.append(iter_memory)
+            # Multi thread for gathering data
+            iter_data = self.multi_thread_episode(args.num_episodes)
+
+            self.memory.append(iter_data)
         
-            if len(self.memory) > args.keep_iters:
+            while len(self.memory) > args.keep_iters:
                 self.memory.popleft(0)
             
             # Update the neural network
