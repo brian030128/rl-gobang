@@ -38,27 +38,32 @@ class MyDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
-def train(model, optimizer, data, batch_size = 3):
+def train(model, optimizer, data, batch_size=3):
     model.train()
-    optimizer.zero_grad()
 
     total_loss = 0
-
     dataset = MyDataset(data)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
     for boards, pis, vs in dataloader:
-        if boards.shape[0] == 1:
-            break
+        optimizer.zero_grad()
+
         pred_pi, pred_v = model(boards)
-        loss_pi = -torch.sum(pis * torch.log(pred_pi + 1e-10))
+        loss_pi = -torch.mean(torch.sum(pis * torch.log(pred_pi + 1e-10), dim=1))
         loss_v = torch.mean((pred_v - vs) ** 2)
         loss = loss_pi + loss_v
-        total_loss += loss.item()
         loss.backward()
-    
-    optimizer.step()
-    return total_loss / len(data)
+        
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 5.0)
+        optimizer.step()
+
+        total_loss += loss.item()
+
+        wandb.log({
+            "Loss": loss.item(),
+        })
+
+    return total_loss / len(dataloader)
 
 def episode_worker(game: GobangGame, net, args, training_data, started_episodes,target_episodes):
     while True:
@@ -170,13 +175,8 @@ class Agent:
             random.shuffle(training_data)
 
             loss = train(self.net, self.optimizer, training_data, args.batch_size)
-            self.train_count += 1
-
             print(f"Iteration {i}, Loss: {loss}")
-            wandb.log({
-                "Train Loss": loss,
-                "Train Step": self.train_count
-            })
+
             
             # save the model every 10 iterations
             if i % 10 == 0:
