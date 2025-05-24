@@ -242,7 +242,7 @@ if __name__ == "__main__":
 
     game = GobangGame()
     net = NeuralNet(game).to(device)
-    wandb.init(project="DLP-Lab5-DQN-CartPole", name=args.wandb_run_name, save_code=True)
+    wandb.init(project="gobang-alphago-zero", name=args.wandb_run_name, save_code=True)
 
     agent = Agent(game, net, args)
     agent.learn()
