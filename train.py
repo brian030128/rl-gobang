@@ -39,15 +39,17 @@ class MyDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
-def train(model, optimizer, data, batch_size=3, train_epoches=10):
+
+def train(model, optimizer, data, batch_size=3, train_epoches=5):
     model.train()
 
     total_loss = 0
     dataset = MyDataset(data)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-    for _ in range(train_epoches):
-        for boards, pis, vs in dataloader:
+    for epoch in range(train_epoches):
+        progress_bar = tqdm(dataloader, desc=f"Epoch {epoch+1}/{train_epoches}")
+        for boards, pis, vs in progress_bar:
             if boards.shape[0] == 1:
                 break
             optimizer.zero_grad()
@@ -57,17 +59,17 @@ def train(model, optimizer, data, batch_size=3, train_epoches=10):
             loss_v = torch.mean((pred_v - vs) ** 2)
             loss = loss_pi + loss_v
             loss.backward()
-            
+
             torch.nn.utils.clip_grad_norm_(model.parameters(), 5.0)
             optimizer.step()
 
             total_loss += loss.item()
 
-            wandb.log({
-                "Loss": loss.item(),
-            })
+            wandb.log({"Loss": loss.item()})
+            progress_bar.set_postfix(loss=loss.item())
 
-    return total_loss / len(dataloader)
+    return total_loss / (len(dataloader) * train_epoches)
+
 
 def episode_worker(game: GobangGame, net, args, training_data, started_episodes,target_episodes):
     while True:
@@ -218,7 +220,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--num_episodes', type=int , default=100)
-    parser.add_argument('--batch_size', type=int , default=40)
+    parser.add_argument('--batch_size', type=int , default=80)
     parser.add_argument('--train_epoches', type=int , default=10)
     parser.add_argument('--num_iterations', type=int, default=1000)
     parser.add_argument("--wandb-run-name", type=str, default="gobang-alpha-zero",)
