@@ -81,7 +81,7 @@ def episode_worker(game: GobangGame, net, args, training_data, started_episodes,
             board, player = game.getNextState(board, player, action)
             result = game.getGameEnded(board, player)
             if result != 0:
-                training_data = [(x, y, result if player == 1 else - result) for x, y, player in training_data]
+                episode_data = [(x, y, result if player == 1 else - result) for x, y, player in episode_data]
                 break
         
         training_data.extend(episode_data)
@@ -207,7 +207,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--num_episodes', type=int , default=100)
+    parser.add_argument('--num_episodes', type=int , default=20)
     parser.add_argument('--batch_size', type=int , default=40)
     parser.add_argument('--num_iterations', type=int, default=1000)
     parser.add_argument("--wandb-run-name", type=str, default="gobang-alpha-zero",)
