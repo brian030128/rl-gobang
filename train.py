@@ -119,7 +119,7 @@ class Agent:
             iter_memory = []
             for j in tqdm(range(args.num_episodes)):
                 training_data = self.episode()
-                iter_memory.append(training_data)
+                iter_memory.extend(training_data)
 
             self.memory.append(iter_memory)
         
@@ -133,7 +133,6 @@ class Agent:
             
             random.shuffle(training_data)
 
-            print(training_data[0])
             loss = train(self.net, self.optimizer, training_data)
             self.train_count += 1
 
