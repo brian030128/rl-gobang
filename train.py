@@ -188,7 +188,7 @@ class Agent:
             
             # save the model every 10 iterations
             if i % 10 == 0:
-                save_model(self.net, f"model_iter_{i}.pth")
+                save_model(self.net, f"{args.save_dir}/model_iter_{i}.pth")
                 print(f"Model saved at model_iter_{i}.pth")
 
             # pk with the best model every 3 iterations
