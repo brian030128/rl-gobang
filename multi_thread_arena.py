@@ -16,7 +16,7 @@ class MultiThreadedArena:
     
     def pk(self, player1, player2, num_games=40):
         results = self.manager.list()
-        games_started = mp.Value('i', 0)
+        games_started = self.manager.Value('i', 0)
         processes = []
 
         for i in range(self.threads):
@@ -30,10 +30,9 @@ class MultiThreadedArena:
 
 def run(game, player1, player2, target_games, started_games, results):
     while True:
-        with started_games.get_lock():
-            if started_games.value >= target_games:
-                break
-            started_games.value += 2
+        if started_games.value >= target_games:
+            break
+        started_games.value += 2
         p1 = copy.deepcopy(player1)
         p2 = copy.deepcopy(player2)
         result1 = play_single_game (game, p1, p2)
@@ -52,7 +51,6 @@ def play_single_game(game, player1, player2):
         board, player = game.getNextState(board, player, action)
         result = game.getGameEnded(board, player)
         if result != 0:
-            print(f"Game ended with result: {result}")
             return result
     
 import argparse
