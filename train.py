@@ -81,7 +81,7 @@ class Agent:
                 break
         return training_data
     
-    
+
 
     def learn(self):
         args = self.args
@@ -164,7 +164,8 @@ if __name__ == "__main__":
     parser.add_argument('--pk_threshold', type=float, default=0.6)
     parser.add_argument('--num_mcts_sims', type=int, default=25)
     parser.add_argument('--cpuct', type=int, default=1)
-    parser.add_argument('--save-dir', type="str", default="models")
+    parser.add_argument('--save-dir', type=str, default="models")
+    parser.add_argument('--threads', type=int, default=10)
 
 
     args = parser.parse_args()
