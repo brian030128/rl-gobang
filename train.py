@@ -29,9 +29,9 @@ class MyDataset(Dataset):
 
     def __getitem__(self, idx):
         board, pi, v = self.data[idx]
-        b_tensor = torch.tensor(board, dtype=torch.float32)
-        pi_tensor = torch.tensor(pi, dtype=torch.float32)
-        v_tensor = torch.tensor(v, dtype=torch.float32)
+        b_tensor = torch.tensor(board, dtype=torch.float32, device=device)
+        pi_tensor = torch.tensor(pi, dtype=torch.float32, device=device)
+        v_tensor = torch.tensor(v, dtype=torch.float32, device=device)
         return b_tensor, pi_tensor, v_tensor
 
     def __len__(self):
