@@ -175,8 +175,6 @@ class Agent:
             training_data = []
             for iter_data in self.memory:
                 training_data.extend(iter_data)
-            
-            random.shuffle(training_data)
 
             loss = train(self.net, self.optimizer, training_data, args.batch_size)
             print(f"Iteration {i}, Loss: {loss}")
@@ -212,7 +210,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--num_episodes', type=int , default=20)
+    parser.add_argument('--num_episodes', type=int , default=100)
     parser.add_argument('--batch_size', type=int , default=40)
     parser.add_argument('--train_epoches', type=int , default=10)
     parser.add_argument('--num_iterations', type=int, default=1000)
