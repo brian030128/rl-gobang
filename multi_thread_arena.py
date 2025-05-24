@@ -20,7 +20,7 @@ class MultiThreadedArena:
         processes = []
 
         for i in range(self.threads):
-            p = mp.Process(target=run, args=(self.game, player1, player2, num_games, games_started, results))
+            p = mp.Process(target=worker, args=(self.game, player1, player2, num_games, games_started, results))
             processes.append(p)
             p.start()
         for p in processes:
@@ -28,7 +28,7 @@ class MultiThreadedArena:
 
         return results
 
-def run(game, player1, player2, target_games, started_games, results):
+def worker(game, player1, player2, target_games, started_games, results):
     while True:
         with started_games.get_lock():
             if started_games.value >= target_games:

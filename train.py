@@ -44,6 +44,28 @@ def train(model, optimizer, data):
     optimizer.step()
     return total_loss / len(data)
 
+
+def episode(self):
+    board = self.game.getInitBoard()
+    player = 1
+    mcts = MCTS(self.game, self.net, self.args)
+
+    training_data = []
+    while True:
+        player_view_board = self.game.getCanonicalForm(board, player)
+        pi = mcts.getActionProb(player_view_board, temp=1)
+        training_data.append((player_view_board, pi, player))
+
+        action = np.random.choice(len(pi), p=pi)
+
+        board, player = game.getNextState(board, player, action)
+        result = game.getGameEnded(board, player)
+        if result != 0:
+            training_data = [(x, y, result if player == 1 else - result) for x, y, player in training_data]
+            break
+    return training_data
+
+
 class Agent:
 
     def __init__(self, game: GobangGame, net: NeuralNet, args):
@@ -111,6 +133,7 @@ class Agent:
             
             random.shuffle(training_data)
 
+            print(training_data)
             loss = train(self.net, self.optimizer, training_data)
             self.train_count += 1
 
@@ -142,20 +165,6 @@ class Agent:
                 self.current_best.load_state_dict(self.net.state_dict())
                 self.best_model_iteration += 1
                 print(f"New best model found at iteration {i} with winrate {winrate:.2f}")
-            
-
-
-
-
-
-        
-    
-
-
-            
-
-                
-
 
 
 if __name__ == "__main__":
@@ -163,7 +172,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--num_episodes', type=int , default=100)
+    parser.add_argument('--num_episodes', type=int , default=1)
     parser.add_argument('--num_iterations', type=int, default=1000)
     parser.add_argument("--wandb-run-name", type=str, default="gobang-alpha-zero",)
     parser.add_argument('--keep_iters', type=int, default=20)
