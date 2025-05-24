@@ -184,7 +184,7 @@ class Agent:
             for iter_data in self.memory:
                 training_data.extend(iter_data)
 
-            loss = train(self.net, self.optimizer, training_data, args.batch_size)
+            loss = train(self.net, self.optimizer, training_data, args.batch_size, args.train_epoches)
             print(f"Iteration {i}, Loss: {loss}")
 
             
@@ -221,10 +221,10 @@ if __name__ == "__main__":
 
     parser.add_argument('--num_episodes', type=int , default=100)
     parser.add_argument('--batch_size', type=int , default=200)
-    parser.add_argument('--train_epoches', type=int , default=10)
+    parser.add_argument('--train_epoches', type=int , default=5)
     parser.add_argument('--num_iterations', type=int, default=1000)
     parser.add_argument("--wandb-run-name", type=str, default="gobang-alpha-zero",)
-    parser.add_argument('--keep_iters', type=int, default=15)
+    parser.add_argument('--keep_iters', type=int, default=10)
     parser.add_argument('--pk_episodes', type=int, default=40)
     parser.add_argument('--pk_threshold', type=float, default=0.6)
     parser.add_argument('--num_mcts_sims', type=int, default=25)
