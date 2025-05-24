@@ -65,7 +65,10 @@ class NeuralNet(nn.Module):
         """
                 # game params
         board = torch.from_numpy(board).float().to(self.conv1.weight.device)
+        print(board.shape)
         board = board[torch.newaxis, :, :]
+
+        print("w: "+board.shape   )
         
         pi, v = self(board)
 
