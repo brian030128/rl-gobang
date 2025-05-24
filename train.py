@@ -60,6 +60,8 @@ class Agent:
         self.best_model_iteration = 0
         self.train_count = 0
 
+        self.manager = mp.Manager()
+
 
     def episode(self):
         board = self.game.getInitBoard()
@@ -82,6 +84,10 @@ class Agent:
                 break
         return training_data
     
+    def multi_thread_episode(self, num_episodes):
+        process = []
+        for i in range(self.args):
+            pass
 
 
     def learn(self):
@@ -158,8 +164,8 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--num_episodes', type=int)
-    parser.add_argument('--num_iterations', type=int)
+    parser.add_argument('--num_episodes', type=int , default=1000)
+    parser.add_argument('--num_iterations', type=int, default=100)
     parser.add_argument("--wandb-run-name", type=str, default="gobang-alpha-zero",)
     parser.add_argument('--keep_iters', type=int, default=20)
     parser.add_argument('--pk_episodes', type=int, default=40)
