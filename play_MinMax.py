@@ -5,7 +5,7 @@ import numpy as np
 
 game = GobangGame()
 human = HumanGobangPlayer(game)
-minmax = MinMaxPlayer(game, search_depth=2)
+minmax = MinMaxPlayer(game, search_depth=2, random_move_prob=0.1)
 
 
 while True:
