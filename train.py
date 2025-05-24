@@ -83,7 +83,10 @@ def episode_worker(game: GobangGame, net, args, training_data, started_episodes,
         while True:
             player_view = game.getCanonicalForm(board, player)
             pi = mcts.getActionProb(player_view, temp=1)
-            episode_data.append((player_view, pi, player))
+
+            sym = game.getSymmetries(player_view, pi)
+            for b, p in sym:
+               episode_data.append((b, p, player))
 
             action = np.random.choice(len(pi), p=pi)
 
@@ -124,6 +127,9 @@ class Agent:
         while True:
             player_view_board = self.game.getCanonicalForm(board, player)
             pi = mcts.getActionProb(player_view_board, temp=1)
+
+            # turn the board four times for more data to train.
+
             training_data.append((player_view_board, pi, player))
 
             action = np.random.choice(len(pi), p=pi)
@@ -185,24 +191,25 @@ class Agent:
                 save_model(self.net, f"model_iter_{i}.pth")
                 print(f"Model saved at model_iter_{i}.pth")
 
-            # pk with the best model
-            result = self.arena.pk(AlphaZeroPlayer(self.game, self.net, args),
-                          AlphaZeroPlayer(self.game, self.current_best, args),
-                          args.pk_episodes)
-            print(result)
-            winrate = result.count(1) / args.pk_episodes
-            print(f"Winrate against current best: {winrate:.2f}")
+            # pk with the best model every 3 iterations
+            if i % 2 == 0:
+                result = self.arena.pk(AlphaZeroPlayer(self.game, self.net, args),
+                            AlphaZeroPlayer(self.game, self.current_best, args),
+                            args.pk_episodes)
+                print(result)
+                winrate = result.count(1) / args.pk_episodes
+                print(f"Winrate against current best: {winrate:.2f}")
+                
+                if winrate > args.pk_threshold:
+                    save_model(self.net, f"{args.save_dir}/best_{self.best_model_iteration}.pth")
+                    self.current_best.load_state_dict(self.net.state_dict())
+                    self.best_model_iteration += 1
+                    print(f"New best model found at iteration {i} with winrate {winrate:.2f}")
 
-            wandb.log({
-                "Winrate": winrate,
-                "Best Model Iteration": self.best_model_iteration
-            })
-            
-            if winrate > args.pk_threshold:
-                save_model(self.net, f"{args.save_dir}/best_{self.best_model_iteration}.pth")
-                self.current_best.load_state_dict(self.net.state_dict())
-                self.best_model_iteration += 1
-                print(f"New best model found at iteration {i} with winrate {winrate:.2f}")
+                wandb.log({
+                    "Winrate": winrate,
+                    "Best Model Iteration": self.best_model_iteration
+                })
 
 
 if __name__ == "__main__":
@@ -215,7 +222,7 @@ if __name__ == "__main__":
     parser.add_argument('--train_epoches', type=int , default=10)
     parser.add_argument('--num_iterations', type=int, default=1000)
     parser.add_argument("--wandb-run-name", type=str, default="gobang-alpha-zero",)
-    parser.add_argument('--keep_iters', type=int, default=20)
+    parser.add_argument('--keep_iters', type=int, default=15)
     parser.add_argument('--pk_episodes', type=int, default=40)
     parser.add_argument('--pk_threshold', type=float, default=0.6)
     parser.add_argument('--num_mcts_sims', type=int, default=25)
