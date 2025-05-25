@@ -9,7 +9,7 @@ greedy = RandomPlayer(game)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 nn = NeuralNet(game).to(device)
-nn.load_state_dict(torch.load("best_1.pth"))
+nn.load_state_dict(torch.load("best.pth"))
 alphago = AlphaZeroPlayer(game, nn)
 
 while True:
