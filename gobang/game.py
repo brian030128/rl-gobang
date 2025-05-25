@@ -103,22 +103,23 @@ class GobangGame:
     def display(board):
         n = board.shape[0]
 
-        for y in range(n):
-            print(y, "|", end="")
-        print("")
-        print(" -----------------------")
-        for y in range(n):
-            print(y, "|", end="")    # print the row #
-            for x in range(n):
-                piece = board[y][x]    # get the piece to print
-                if piece == -1:
-                    print("b ", end="")
+        # 上方欄位編號（從 0 開始）
+        top_row = '\n     ' + '   '.join(str(i) for i in range(n))
+        print(top_row)
+
+        # 分隔線
+        separator = '   +' + '---+' * n
+        print(separator)
+
+        for i in range(n):
+            row_str = f'{i:2d} |'  # 列號（從 0 開始）
+            for j in range(n):
+                piece = board[i][j]
+                if piece == 0:
+                    row_str += '   |'
                 elif piece == 1:
-                    print("W ", end="")
-                else:
-                    if x == n:
-                        print("-", end="")
-                    else:
-                        print("- ", end="")
-            print("|")
-        print("   -----------------------")
+                    row_str += ' B |'  # 黑棋
+                elif piece == -1:
+                    row_str += ' W |'  # 白棋
+            print(row_str)
+            print(separator)
