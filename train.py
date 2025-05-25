@@ -179,7 +179,7 @@ class Agent:
             self.memory.append(iter_data)
         
             while len(self.memory) > args.keep_iters:
-                self.memory.popleft(0)
+                self.memory.popleft()
             
             # Update the neural network
             training_data = []
