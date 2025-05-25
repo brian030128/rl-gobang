@@ -4,6 +4,23 @@ import time
 import copy
 import random
 
+level_settings = [
+    (0.5, 0),
+    (0.4, 0),
+    (0.3, 0),
+    (0.2, 0),
+    (0, 0),
+    (0, 1),
+    (0, 2)
+]
+
+class LeveledMinMaxPlayer:
+    def __init__(self, game, level: int=0):
+        #level is 1~10
+        self.inner = MinMaxPlayer(game, level_settings[level][1], level_settings[level][0])
+    
+    def play(self, board, player):
+        return self.inner.play(board, player)
 
 
 class MinMaxPlayer:
