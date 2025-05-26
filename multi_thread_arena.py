@@ -1,5 +1,6 @@
 from gobang.game import GobangGame
 from gobang.players import AlphaZeroPlayer
+from gobang.min_max_player import LeveledMinMaxPlayer
 from net import NeuralNet
 import torch
 import time
@@ -48,7 +49,7 @@ def play_single_game(game: GobangGame, player1, player2):
     board = game.getInitBoard()
     player = 1
     while True:
-        action = player1.play(board) if player == 1 else player2.play(board)
+        action = player1.play(board, player) if player == 1 else player2.play(board, player)
         board, player = game.getNextState(board, player, action)
         result = game.getGameEnded(board, player)
         if result != 0:
@@ -62,6 +63,7 @@ if __name__ == '__main__':
     game = GobangGame()
 
     nn1 = NeuralNet(game).to(device)
+    nn1.load_state_dict(torch.load("best.pth"))
     nn1.eval()
     nn2 = NeuralNet(game).to(device)
     nn2.eval()
@@ -77,10 +79,12 @@ if __name__ == '__main__':
 
 
     player1 = AlphaZeroPlayer(game, nn1, copy.deepcopy(args))
-    player2 = AlphaZeroPlayer(game, nn2, copy.deepcopy(args))
+    player2 = LeveledMinMaxPlayer(game, 0)
+    #player2 = AlphaZeroPlayer(game, nn2, copy.deepcopy(args))
 
     start = time.time()
     result = arena.pk(player1, player2)
     print(result)
     print(len(result))
+    print(result.count(1)/len(result))
     print("Total time taken:", time.time() - start)

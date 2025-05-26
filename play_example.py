@@ -21,7 +21,7 @@ while True:
         if player == 1:
             action = human.play(board, player)
         else:
-            action = minmax.play(board, player)
+            action = alphago.play(board, player)
         board, player = game.getNextState(board, player, action)
         game.display(board)
         result = game.getGameEnded(board, player)

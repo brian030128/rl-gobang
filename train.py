@@ -14,6 +14,7 @@ from torch.utils.data import Dataset, DataLoader
 
 from multi_thread_arena import MultiThreadedArena
 from gobang.players import AlphaZeroPlayer
+from gobang.min_max_player import LeveledMinMaxPlayer, level_settings
 from gobang.game import GobangGame
 from net import NeuralNet
 from mcts import MCTS
@@ -161,6 +162,7 @@ class Agent:
 
     def learn(self):
         args = self.args
+        eval_level = 0
         for i in range(args.num_iterations):
             print(f"Starting iteration {i}")
 
@@ -203,18 +205,42 @@ class Agent:
                 print(result)
                 winrate = result.count(1) / args.pk_episodes
                 print(f"Winrate against current best: {winrate:.2f}")
-                
-                if winrate > args.pk_threshold:
-                    save_model(self.net, f"{args.save_dir}/best_{self.best_model_iteration}.pth")
-                    self.current_best.load_state_dict(self.net.state_dict())
-                    self.best_model_iteration += 1
-                    print(f"New best model found at iteration {i} with winrate {winrate:.2f}")
 
                 wandb.log({
                     "Winrate": winrate,
                     "Best Model Iteration": self.best_model_iteration
                 })
 
+                
+                if winrate < args.pk_threshold:
+                    continue
+
+                self.best_model_iteration += 1
+                save_model(self.net, f"{args.save_dir}/best_{self.best_model_iteration}.pth")
+                self.current_best.load_state_dict(self.net.state_dict())
+                print(f"New best model found at iteration {i} with winrate {winrate:.2f}")
+
+                ## Eval new model on the min max player
+                min_max_result = self.arena.pk(AlphaZeroPlayer(self.game, self.net, args),
+                        LeveledMinMaxPlayer(self.game, eval_level),
+                        args.pk_episodes)
+                min_max_winrate = min_max_result.count(1) / args.pk_episodes
+                
+                wandb.log({
+                    "Eval Score": min_max_winrate,
+                    "Eval Level": eval_level
+                })
+
+                if min_max_winrate < 0.5:
+                    continue
+                
+                # increase eval level
+                eval_level = min(eval_level + 1, len(level_settings) - 1)
+                
+                    
+
+                
+            
 
 if __name__ == "__main__":
     torch.multiprocessing.set_start_method('spawn')
@@ -223,10 +249,10 @@ if __name__ == "__main__":
 
     parser.add_argument('--num_episodes', type=int , default=100)
     parser.add_argument('--batch_size', type=int , default=64)
-    parser.add_argument('--train_epoches', type=int , default=5)
+    parser.add_argument('--train_epoches', type=int , default=10)
     parser.add_argument('--num_iterations', type=int, default=1000)
     parser.add_argument("--wandb-run-name", type=str, default="gobang-alpha-zero")
-    parser.add_argument('--keep_iters', type=int, default=10)
+    parser.add_argument('--keep_iters', type=int, default=20)
     parser.add_argument('--pk_episodes', type=int, default=40)
     parser.add_argument('--pk_threshold', type=float, default=0.6)
     parser.add_argument('--num_mcts_sims', type=int, default=25)
