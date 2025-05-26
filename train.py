@@ -131,7 +131,7 @@ class Agent:
             pi = mcts.getActionProb(player_view_board, temp=1)
 
             # turn the board four times for more data to train.
-            b_tensor =  torch.from_numpy(board).float().to(device)
+            b_tensor = torch.tensor(player_view_board, dtype=torch.float32, device=device)
             pi_tensor = torch.tensor(pi, dtype=torch.float32, device=device)
             training_data.append((b_tensor, pi_tensor, player))
 
