@@ -32,7 +32,6 @@ class MyDataset(Dataset):
 
     def __getitem__(self, idx):
         board, pi, v = self.data[idx]
-        print(board)
         return board, pi, v
 
     def __len__(self):
@@ -133,6 +132,7 @@ class Agent:
 
             # turn the board four times for more data to train.
             b_tensor = torch.tensor(player_view_board, dtype=torch.float32, device=device)
+            print(b_tensor)
             pi_tensor = torch.tensor(pi, dtype=torch.float32, device=device)
             training_data.append((b_tensor, pi_tensor, player))
 
