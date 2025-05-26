@@ -32,6 +32,7 @@ class MyDataset(Dataset):
 
     def __getitem__(self, idx):
         board, pi, v = self.data[idx]
+        print(board)
         return board, pi, v
 
     def __len__(self):
@@ -247,7 +248,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--num_episodes', type=int , default=100)
+    parser.add_argument('--num_episodes', type=int , default=1)
     parser.add_argument('--batch_size', type=int , default=100)
     parser.add_argument('--train_epoches', type=int , default=4)
     parser.add_argument('--num_iterations', type=int, default=1000)
