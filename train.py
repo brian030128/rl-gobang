@@ -159,7 +159,8 @@ class Agent:
 
         training_data = [
             (torch.tensor(x, dtype=torch.float32, device=device),
-              torch.tensor(y, dtype=torch.float32, device=device), v) for x, y, v in training_data]
+              torch.tensor(y, dtype=torch.float32, device=device),
+                torch.tensor(v, dtype=torch.float32, device=device)) for x, y, v in training_data]
         return training_data
             
 
