@@ -68,7 +68,7 @@ def train(model, optimizer, data, batch_size=3, train_epoches=5):
 
     return total_loss / (len(dataloader) * train_epoches)
 
-
+import array
 def episode_worker(game: GobangGame, net, args, training_data, started_episodes,target_episodes, temp_threshold):
     while True:
         with started_episodes.get_lock():
@@ -88,7 +88,7 @@ def episode_worker(game: GobangGame, net, args, training_data, started_episodes,
 
             sym = game.getSymmetries(player_view, pi)
             for b, p in sym:
-                b_tensor = torch.tensor(b, dtype=torch.float32, device=device)
+                b_tensor = torch.tensor(b.copy(), dtype=torch.float32, device=device)
                 pi_tensor = torch.tensor(p, dtype=torch.float32, device=device)
                 episode_data.append((b_tensor, pi_tensor, player))
 
