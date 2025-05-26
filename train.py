@@ -32,10 +32,7 @@ class MyDataset(Dataset):
 
     def __getitem__(self, idx):
         board, pi, v = self.data[idx]
-        b_tensor = torch.tensor(board, dtype=torch.float32, device=device)
-        pi_tensor = torch.tensor(pi, dtype=torch.float32, device=device)
-        v_tensor = torch.tensor(v, dtype=torch.float32, device=device)
-        return b_tensor, pi_tensor, v_tensor
+        return board, pi, v
 
     def __len__(self):
         return len(self.data)
@@ -134,15 +131,18 @@ class Agent:
             pi = mcts.getActionProb(player_view_board, temp=1)
 
             # turn the board four times for more data to train.
-
-            training_data.append((player_view_board, pi, player))
+            b_tensor = torch.tensor(board, dtype=torch.float32, device=device)
+            pi_tensor = torch.tensor(pi, dtype=torch.float32, device=device)
+            training_data.append((b_tensor, pi_tensor, player))
 
             action = np.random.choice(len(pi), p=pi)
 
             board, player = game.getNextState(board, player, action)
             result = game.getGameEnded(board, player)
             if result != 0:
-                training_data = [(x, y, result if player == 1 else - result) for x, y, player in training_data]
+                training_data = [(x, y, torch.tensor(
+                    result if player == 1 else - result, dtype=torch.float32, device=device
+                )) for x, y, player in training_data]
                 break
         return training_data
     
