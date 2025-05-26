@@ -88,7 +88,9 @@ def episode_worker(game: GobangGame, net, args, training_data, started_episodes,
 
             sym = game.getSymmetries(player_view, pi)
             for b, p in sym:
-               episode_data.append((b, p, player))
+                b_tensor = torch.tensor(b, dtype=torch.float32, device=device)
+                pi_tensor = torch.tensor(p, dtype=torch.float32, device=device)
+                episode_data.append((b_tensor, pi_tensor, player))
 
             action = np.random.choice(len(pi), p=pi)
 
@@ -132,7 +134,6 @@ class Agent:
 
             # turn the board four times for more data to train.
             b_tensor = torch.tensor(player_view_board, dtype=torch.float32, device=device)
-            print(b_tensor)
             pi_tensor = torch.tensor(pi, dtype=torch.float32, device=device)
             training_data.append((b_tensor, pi_tensor, player))
 
