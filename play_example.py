@@ -11,7 +11,7 @@ minmax = MinMaxPlayer(game, search_depth=2)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 nn = NeuralNet(game).to(device)
-nn.load_state_dict(torch.load("best.pth"))
+nn.load_state_dict(torch.load("best.pth", map_location=torch.device(device)))
 alphago = AlphaZeroPlayer(game, nn)
 
 while True:
