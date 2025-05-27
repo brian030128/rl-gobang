@@ -192,6 +192,9 @@ class Agent:
             training_data = []
             for iter_data in self.memory:
                 training_data.extend(iter_data)
+            
+            if i < self.args.training_start:
+                continue
 
             loss = train(self.net, self.optimizer, training_data, args.batch_size, args.train_epoches)
             print(f"Iteration {i}, Loss: {loss}")
@@ -264,7 +267,8 @@ if __name__ == "__main__":
     parser.add_argument('--cpuct', type=int, default=1)
     parser.add_argument('--save_dir', type=str, default="models")
     parser.add_argument('--threads', type=int, default=10)
-    parser.add_argument('--temp_threshold', type=int, default=3)
+    parser.add_argument('--temp_threshold', type=int, default=4)
+    parser.add_argument('--training_start', type=int, default=5, help="How many iterations after should the training start.")
     parser.add_argument("--seed", type=int, default=524126, help="Random seed for reproduction")
 
     args = parser.parse_args()
