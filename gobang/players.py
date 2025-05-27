@@ -23,7 +23,7 @@ class HumanGobangPlayer():
         #    if valid[i]:
         #        print(int(i/self.game.n), int(i%self.game.n))
         while True:
-            a = input()
+            a = input().strip()
 
             x,y = [int(x) for x in a.split(' ')]
             a = self.game.n * x + y if x!= -1 else self.game.n ** 2
@@ -55,7 +55,7 @@ class AlphaZeroPlayer():
         self.mcts = MCTS(self.game, self.nnet, args)
 
 
-    def play(self, board, player, temp=1):
+    def play(self, board, player, temp=0):
         board = self.game.getCanonicalForm(board, player)
         pi = self.mcts.getActionProb(board, temp=temp)
         action = np.random.choice(len(pi), p=pi)
