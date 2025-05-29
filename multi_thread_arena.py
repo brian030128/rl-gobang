@@ -15,7 +15,7 @@ class MultiThreadedArena:
         self.results = []
         self.manager = mp.Manager()
     
-    def pk(self, player1, player2, num_games=40):
+    def pk(self, player1, player2, num_games=100):
         results = self.manager.list()
         games_started = mp.Value('i', 0)
         processes = []

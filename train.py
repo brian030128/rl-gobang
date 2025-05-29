@@ -10,7 +10,7 @@ import wandb
 import torch
 import numpy as np
 from tqdm import tqdm
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, Subset
 
 from multi_thread_arena import MultiThreadedArena
 from gobang.players import AlphaZeroPlayer
@@ -43,10 +43,15 @@ def train(model, optimizer, data, batch_size=3, train_epoches=5):
 
     total_loss = 0
     dataset = MyDataset(data)
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
     for epoch in range(train_epoches):
+        subset_size = int(0.2 * len(dataset))
+        sampled_indices = random.sample(range(len(dataset)), subset_size)
+        subset = Subset(dataset, sampled_indices)
+
+        dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True)
         progress_bar = tqdm(dataloader, desc=f"Epoch {epoch+1}/{train_epoches}")
+
         for boards, pis, vs in progress_bar:
             if boards.shape[0] == 1:
                 break
@@ -267,7 +272,7 @@ if __name__ == "__main__":
     parser.add_argument('--cpuct', type=int, default=1)
     parser.add_argument('--save_dir', type=str, default="models")
     parser.add_argument('--threads', type=int, default=10)
-    parser.add_argument('--temp_threshold', type=int, default=4)
+    parser.add_argument('--temp_threshold', type=int, default=5)
     parser.add_argument('--training_start', type=int, default=10, help="How many iterations after should the training start.")
     parser.add_argument("--seed", type=int, default=524126, help="Random seed for reproduction")
 
