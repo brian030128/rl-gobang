@@ -18,6 +18,7 @@ from gobang.min_max_player import LeveledMinMaxPlayer, level_settings
 from gobang.game import GobangGame
 from net import NeuralNet
 from mcts import MCTS
+from per import PrioritizedReplayBuffer
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -38,40 +39,40 @@ class MyDataset(Dataset):
         return len(self.data)
 
 
-def train(model, optimizer, data, batch_size=3, train_epoches=5):
+def train(model, optimizer, replay_buffer, batch_size=3, train_epoches=5, beta_start=0.4, beta_increment=0.01):
     model.train()
-
     total_loss = 0
-    dataset = MyDataset(data)
+    beta = beta_start
 
     for epoch in range(train_epoches):
-        subset_size = int(0.2 * len(dataset))
-        sampled_indices = random.sample(range(len(dataset)), subset_size)
-        subset = Subset(dataset, sampled_indices)
+        batch, weights, indices = replay_buffer.sample(batch_size, beta=beta)
+        beta = min(1.0, beta + beta_increment)
 
-        dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True)
-        progress_bar = tqdm(dataloader, desc=f"Epoch {epoch+1}/{train_epoches}")
+        boards, pis, vs = zip(*batch)
+        boards = torch.stack(boards)
+        pis = torch.stack(pis)
+        vs = torch.stack(vs)
 
-        for boards, pis, vs in progress_bar:
-            if boards.shape[0] == 1:
-                break
-            optimizer.zero_grad()
+        optimizer.zero_grad()
+        pred_pi, pred_v = model(boards)
+        loss_pi = -torch.sum(pis * torch.log(pred_pi + 1e-10), dim=1)
+        loss_v = (pred_v.squeeze() - vs) ** 2
 
-            pred_pi, pred_v = model(boards)
-            loss_pi = -torch.mean(torch.sum(pis * torch.log(pred_pi + 1e-10), dim=1))
-            loss_v = torch.mean((pred_v - vs) ** 2)
-            loss = loss_pi + loss_v
-            loss.backward()
+        total = loss_pi + loss_v
+        weighted_loss = torch.mean(weights * total)
+        weighted_loss.backward()
 
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 5.0)
-            optimizer.step()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 5.0)
+        optimizer.step()
 
-            total_loss += loss.item()
+        new_priorities = total.detach().cpu().numpy() + 1e-6  # avoid zero
+        replay_buffer.update_priorities(indices, new_priorities)
 
-            wandb.log({"Loss": loss.item()})
-            progress_bar.set_postfix(loss=loss.item())
+        wandb.log({"Loss": weighted_loss.item()})
+        total_loss += weighted_loss.item()
 
-    return total_loss / (len(dataloader) * train_epoches)
+    return total_loss / train_epoches
+
 
 import array
 def episode_worker(game: GobangGame, net, args, training_data, started_episodes,target_episodes, temp_threshold):
@@ -110,7 +111,7 @@ class Agent:
 
     def __init__(self, game: GobangGame, net: NeuralNet, args):
         self.args = args
-        self.memory = deque()
+        self.memory = PrioritizedReplayBuffer(capacity=200000, alpha=0.6)
         self.game = game
         self.net = net
         self.current_best = copy.deepcopy(net)
@@ -188,10 +189,8 @@ class Agent:
             iter_data = self.multi_thread_episode(args.num_episodes)
             print("Iteration took ", time.time() - start)
 
-            self.memory.append(iter_data)
-        
-            while len(self.memory) > args.keep_iters:
-                self.memory.popleft()
+            for transition in iter_data:
+                self.memory.add(transition, priority=1.0)
             
             # Update the neural network
             training_data = []
@@ -201,7 +200,7 @@ class Agent:
             if i < self.args.training_start:
                 continue
 
-            loss = train(self.net, self.optimizer, training_data, args.batch_size, args.train_epoches)
+            loss = train(self.net, self.optimizer, self.replay_buffer, self.args.batch_size, self.args.train_epoches)
             print(f"Iteration {i}, Loss: {loss}")
 
             
