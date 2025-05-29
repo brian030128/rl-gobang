@@ -216,7 +216,6 @@ class Agent:
 
                 wandb.log({
                     "Winrate": winrate,
-                    "Best Model Iteration": self.best_model_iteration
                 })
 
                 
@@ -224,6 +223,11 @@ class Agent:
                     continue
 
                 self.best_model_iteration += 1
+
+                wandb.log({
+                    "Best Model Iteration": self.best_model_iteration
+                })
+                
                 save_model(self.net, f"{args.save_dir}/best_{self.best_model_iteration}.pth")
                 self.current_best.load_state_dict(self.net.state_dict())
                 print(f"New best model found at iteration {i} with winrate {winrate:.2f}")
