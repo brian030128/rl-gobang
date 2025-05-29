@@ -196,7 +196,7 @@ class Agent:
             if i < self.args.training_start:
                 continue
 
-            loss = train(self.net, self.optimizer, self.replay_buffer, self.args.batch_size, self.args.train_epoches)
+            loss = train(self.net, self.optimizer, self.memory, self.args.batch_size, self.args.train_epoches)
             print(f"Iteration {i}, Loss: {loss}")
 
             
