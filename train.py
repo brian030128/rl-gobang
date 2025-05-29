@@ -266,7 +266,7 @@ if __name__ == "__main__":
     parser.add_argument("--wandb-run-name", type=str, default="gobang-alpha-zero")
     parser.add_argument('--keep_iters', type=int, default=20)
     parser.add_argument('--pk_episodes', type=int, default=40)
-    parser.add_argument('--pk_threshold', type=float, default=0.6)
+    parser.add_argument('--pk_threshold', type=float, default=0.55)
     parser.add_argument('--num_mcts_sims', type=int, default=25)
     parser.add_argument('--cpuct', type=int, default=1)
     parser.add_argument('--save_dir', type=str, default="models")
