@@ -193,10 +193,6 @@ class Agent:
                 self.memory.add(transition, priority=1.0)
             
             # Update the neural network
-            training_data = []
-            for iter_data in self.memory:
-                training_data.extend(iter_data)
-            
             if i < self.args.training_start:
                 continue
 
