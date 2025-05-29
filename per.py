@@ -1,8 +1,10 @@
 import numpy as np 
-
+import torch
 
 import bisect
 import heapq
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 class PrioritizedReplayBuffer:
     def __init__(self, capacity, alpha=0.6):
