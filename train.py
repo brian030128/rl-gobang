@@ -284,7 +284,6 @@ if __name__ == "__main__":
 
     game = GobangGame()
     net = NeuralNet(game).to(device)
-    net.load_state_dict(torch.load("best.pth"))
     wandb.init(project="gobang-alphago-zero", name=args.wandb_run_name, save_code=True)
 
     agent = Agent(game, net, args)
