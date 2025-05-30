@@ -111,7 +111,7 @@ class Agent:
 
     def __init__(self, game: GobangGame, net: NeuralNet, args):
         self.args = args
-        self.memory = PrioritizedReplayBuffer(capacity=200000, alpha=0.6)
+        self.memory = PrioritizedReplayBuffer(capacity=300000, alpha=0.6)
         self.game = game
         self.net = net
         self.current_best = copy.deepcopy(net)
@@ -227,7 +227,7 @@ class Agent:
                 wandb.log({
                     "Best Model Iteration": self.best_model_iteration
                 })
-                
+
                 save_model(self.net, f"{args.save_dir}/best_{self.best_model_iteration}.pth")
                 self.current_best.load_state_dict(self.net.state_dict())
                 print(f"New best model found at iteration {i} with winrate {winrate:.2f}")
@@ -239,7 +239,7 @@ class Agent:
                 min_max_winrate = min_max_result.count(1) / args.pk_episodes
                 
                 wandb.log({
-                    "Eval Score": min_max_winrate,
+                    "Eval Score": min_max_winrate + eval_level,
                     "Eval Level": eval_level
                 })
 
