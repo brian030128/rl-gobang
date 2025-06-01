@@ -39,7 +39,7 @@ class MyDataset(Dataset):
         return len(self.data)
 
 
-def train(model, optimizer, replay_buffer, batch_size=3, train_epoches=5, beta_start=0.4, beta_increment=0.01):
+def train(model, optimizer, replay_buffer, batch_size=3, train_epoches=50, beta_start=0.4, beta_increment=0.01):
     model.train()
     total_loss = 0
     beta = beta_start
@@ -261,7 +261,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--num_episodes', type=int , default=100)
     parser.add_argument('--batch_size', type=int , default=100)
-    parser.add_argument('--train_epoches', type=int , default=8)
+    parser.add_argument('--train_epoches', type=int , default=500)
     parser.add_argument('--num_iterations', type=int, default=1000)
     parser.add_argument("--wandb-run-name", type=str, default="gobang-alpha-zero")
     parser.add_argument('--keep_iters', type=int, default=20)
@@ -271,7 +271,7 @@ if __name__ == "__main__":
     parser.add_argument('--cpuct', type=int, default=1)
     parser.add_argument('--save_dir', type=str, default="models")
     parser.add_argument('--threads', type=int, default=10)
-    parser.add_argument('--temp_threshold', type=int, default=7)
+    parser.add_argument('--temp_threshold', type=int, default=10)
     parser.add_argument('--training_start', type=int, default=10, help="How many iterations after should the training start.")
     parser.add_argument("--seed", type=int, default=524126, help="Random seed for reproduction")
 
