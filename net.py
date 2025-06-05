@@ -1,8 +1,11 @@
 from gobang.board import Board 
 from gobang.game import GobangGame
+from torch import nn
+from tqdm import tqdm
+import numpy as np
 
 import torch
-from torch import nn
+import os
 import torch.nn.functional as F
 
 class NeuralNet(nn.Module):
@@ -65,8 +68,108 @@ class NeuralNet(nn.Module):
         """
                 # game params
         board = torch.from_numpy(board).float().to(self.conv1.weight.device)
-        board = board[torch.newaxis, :, :]
+        board = board[None, :, :]
         
         pi, v = self(board)
 
         return pi[0].to("cpu").numpy(), v[0].to("cpu").numpy()
+
+    def save_checkpoint(self, folder, filename):
+        """
+        Saves the current neural network (with its parameters) in
+        folder/filename
+        """
+        filename = filename.split(".")[0] + ".pth"
+        
+        filepath = os.path.join(folder, filename)
+        if not os.path.exists(folder):
+            print("Checkpoint Directory does not exist! Making directory {}".format(folder))
+            os.mkdir(folder)
+        else:
+            print("Checkpoint Directory exists! ")
+        
+        torch.save(self.state_dict(), filepath)
+
+    def load_checkpoint(self, folder, filename):
+        """
+        Loads parameters of the neural network from folder/filename
+        """
+        filename = filename.split('.')[0] + '.pth'
+
+        filepath = os.path.join(folder, filename)
+        if not os.path.exists(filepath):
+            raise(f'No model in path {filepath}')
+
+        self.load_state_dict(torch.load(filepath, map_location=torch.device('cuda'))) #GPU
+   
+    def lossfunc(self, examples, batch_size=64, device='cuda'):
+        """
+        使用分批訓練處理 examples，避免 GPU OOM。
+        
+        examples: List of (board, pi, v)
+        batch_size: 每一小批次的大小
+        device: 'cuda' 或 'cpu'
+        """
+        self.train()
+        optimizer = torch.optim.SGD(self.parameters(), lr=0.01, weight_decay=1e-4)
+
+        total_loss = 0
+        num_batches = (len(examples) + batch_size - 1) // batch_size  # 向上取整
+
+        for i in tqdm(range(0, len(examples), batch_size), desc="Training"):
+            batch = examples[i:i+batch_size]
+
+            # 拆 batch 並轉 tensor（加上 np.array 提高效能）
+            boards, target_pi, target_v = zip(*batch)
+            boards = torch.tensor(np.array(boards), dtype=torch.float32).to(device)
+            target_pi = torch.tensor(np.array(target_pi), dtype=torch.float32).to(device)
+            target_v = torch.tensor(np.array(target_v), dtype=torch.float32).to(device)
+
+            optimizer.zero_grad()
+
+            # 前向傳播
+            out_pi, out_v = self(boards)
+
+            # 損失計算
+            p_loss = -torch.sum(target_pi * torch.log(out_pi + 1e-8)) / boards.size(0)
+            v_loss = torch.mean((target_v - out_v.squeeze()) ** 2)
+            loss = v_loss + p_loss
+
+            # 反向傳播與參數更新
+            loss.backward()
+            optimizer.step()
+
+            total_loss += loss.item()
+
+        # 平均每 batch 的 loss
+        avg_loss = total_loss / num_batches
+
+        return avg_loss
+
+"""     def lossfunc(self, examples, device='cuda'):
+        optimizer = torch.optim.SGD(self.parameters(), lr=0.01, weight_decay=1e-4)
+        
+        self.train()
+        
+        boards, target_pi, target_v = zip(*examples)
+        boards = torch.tensor(boards, dtype=torch.float32).to(device)
+        target_pi = torch.tensor(target_pi, dtype=torch.float32).to(device)
+        target_v = torch.tensor(target_v, dtype=torch.float32).to(device)
+        
+        optimizer.zero_grad()
+
+        out_pi, out_v = self(boards)
+
+        p_loss = -torch.sum(target_pi * torch.log(out_pi + 1e-8)) / boards.size(0)
+        v_loss =  torch.mean((target_v - out_v.squeeze()) ** 2)
+        total_loss = v_loss + p_loss # L2 已含在 weight_decay 中
+        total_loss.backward()
+        
+        optimizer.step()
+        
+        torch.save(self.state_dict(), "weight.pth")
+
+        return total_loss.item() """
+
+
+

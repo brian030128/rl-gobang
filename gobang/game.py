@@ -58,6 +58,7 @@ class GobangGame:
 
         for w in range(self.n):
             for h in range(self.n):
+                #確保不超出範圍、確保格子不空、確保連成一線（用set)
                 if (w in range(self.n - n + 1) and board[w][h] != 0 and
                         len(set(board[i][h] for i in range(w, w + n))) == 1):
                     return board[w][h]
