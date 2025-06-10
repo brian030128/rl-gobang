@@ -6,7 +6,7 @@ import numpy as np
 
 
 class GobangGame:
-    def __init__(self, n=15, nir=5):
+    def __init__(self, n=11, nir=5):
         self.n = n
         self.n_in_row = nir
 
